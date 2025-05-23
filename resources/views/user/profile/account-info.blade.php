@@ -37,10 +37,9 @@
 
         <div class="col-span-9">
             <h2 class="flex items-center space-x-4 text-2xl font-semibold mb-4">
-                <span>{{ $user->username ?? 'Username' }}</span>
+                <span>{{ $user->name ?? 'Full Name' }}</span>
                 <span class="text-yellow-400 text-base font-light border border-yellow-400 rounded-full w-8 h-8 flex items-center justify-center">BS</span>
             </h2>
-            <p class="text-gray-700 text-lg">{{ $user->name ?? 'Full Name' }}</p>
             <p class="text-gray-500 mb-2">{{ $user->email ?? 'email@example.com' }}</p>
             <p class="font-semibold mb-6">Member since: {{ $user->created_at->format('F Y') }}</p>
 

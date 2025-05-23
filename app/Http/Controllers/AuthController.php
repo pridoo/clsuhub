@@ -48,10 +48,16 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials, $request->remember)) {
+        // Try admin login first
+        if (Auth::guard('admin')->attempt($credentials, $request->remember)) {
             $request->session()->regenerate();
+            return redirect()->route('admin.dashboard'); // admin dashboard route name
+        }
 
-            return redirect()->route('dashboard'); // Match your named route
+        // Then try user login
+        if (Auth::guard('web')->attempt($credentials, $request->remember)) {
+            $request->session()->regenerate();
+            return redirect()->route('dashboard'); // user dashboard route
         }
 
         throw ValidationException::withMessages([

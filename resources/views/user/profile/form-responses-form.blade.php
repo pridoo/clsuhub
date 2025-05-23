@@ -14,7 +14,7 @@
 
         <div>
             <label for="address" class="block font-semibold mb-1">Address</label>
-            <input type="text" name="address" id="address" value="{{ old('address', $formResponse->address) }}"
+            <input type="text" name="address" id="address" value="{{ old('address', default: $formResponse->address) }}"
                 class="w-full border rounded px-3 py-2 focus:ring focus:ring-blue-300">
             @error('address') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
         </div>
@@ -63,9 +63,27 @@
 
         <div>
             <label for="present_employment" class="block font-semibold mb-1">Present Employment</label>
-            <input type="text" name="present_employment" id="present_employment"
-                value="{{ old('present_employment', $formResponse->present_employment) }}"
-                class="w-full border rounded px-3 py-2 focus:ring focus:ring-blue-300">
+            <select name="present_employment" id="present_employment"
+                class="w-full border rounded px-3 py-2 focus:ring focus:ring-blue-300" required>
+                <option value="" disabled {{ old('present_employment', $formResponse->present_employment ?? '') == '' ? 'selected' : '' }}>
+                    -- Select Employment Status --
+                </option>
+                <option value="Employed" {{ old('present_employment', $formResponse->present_employment ?? '') == 'Employed' ? 'selected' : '' }}>
+                    Employed
+                </option>
+                <option value="Unemployed" {{ old('present_employment', $formResponse->present_employment ?? '') == 'Unemployed' ? 'selected' : '' }}>
+                    Unemployed
+                </option>
+                <option value="Self-Employed" {{ old('present_employment', $formResponse->present_employment ?? '') == 'Self-Employed' ? 'selected' : '' }}>
+                    Self-Employed
+                </option>
+                <option value="Student" {{ old('present_employment', $formResponse->present_employment ?? '') == 'Student' ? 'selected' : '' }}>
+                    Student
+                </option>
+                <option value="Others" {{ old('present_employment', $formResponse->present_employment ?? '') == 'Others' ? 'selected' : '' }}>
+                    Others
+                </option>
+            </select>
             @error('present_employment') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
         </div>
 

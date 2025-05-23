@@ -168,39 +168,8 @@
             </form>
           </div>
 
-          {{-- Comments and nested replies --}}
-          @if ($post->comments->count() > 0)
-            <div id="comments-container-{{ $post->id }}" class="border-t border-gray-200 pt-4 mt-4 max-h-48 overflow-y-auto">
-              @foreach ($post->comments->whereNull('parent_id') as $comment)
-                <div class="mb-3" id="comment-{{ $comment->id }}">
-                  <div class="font-semibold">{{ $comment->user->name }}</div>
-                  <div class="text-sm text-gray-700">{{ $comment->comment }}</div>
-                  <div class="text-xs text-gray-500">{{ $comment->created_at->diffForHumans() }}</div>
-
-                  <button type="button" class="text-blue-600 text-sm mt-1" onclick="toggleReplyForm({{ $comment->id }})">Reply</button>
-
-                  <div id="reply-form-{{ $comment->id }}" class="hidden mt-2">
-                    <textarea rows="2" class="w-full p-2 border border-gray-300 rounded" placeholder="Write your reply..."></textarea>
-                    <button type="button" class="mt-1 px-3 py-1 bg-blue-600 text-white rounded" onclick="submitReply({{ $post->id }}, {{ $comment->id }})">Submit Reply</button>
-                  </div>
-
-                  {{-- Replies --}}
-                  @foreach ($comment->replies as $reply)
-                    <div class="ml-6 mt-2 border-l border-gray-300 pl-3" id="comment-{{ $reply->id }}">
-                      <div class="font-semibold">{{ $reply->user->name }}</div>
-                      <div class="text-sm text-gray-700">{{ $reply->comment }}</div>
-                      <div class="text-xs text-gray-500">{{ $reply->created_at->diffForHumans() }}</div>
-                      <button type="button" class="text-blue-600 text-sm mt-1" onclick="toggleReplyForm({{ $reply->id }})">Reply</button>
-                      <div id="reply-form-{{ $reply->id }}" class="hidden mt-2">
-                        <textarea rows="2" class="w-full p-2 border border-gray-300 rounded" placeholder="Write your reply..."></textarea>
-                        <button type="button" class="mt-1 px-3 py-1 bg-blue-600 text-white rounded" onclick="submitReply({{ $post->id }}, {{ $reply->id }})">Submit Reply</button>
-                      </div>
-                    </div>
-                  @endforeach
-                </div>
-              @endforeach
-            </div>
-          @endif
+          {{-- COMMENTS & REPLIES (FROM YOUR PARTIAL) --}}
+          @include('partials.comment-ajax', ['comments' => $post->comments, 'postId' => $post->id])
 
         </article>
       </div>
@@ -209,11 +178,86 @@
 </section>
 @endsection
 
+
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // -- MODAL OPEN/CLOSE --
+  const openModalBtn = document.getElementById('openModalBtn');
+  const createPostModal = document.getElementById('createPostModal');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+
+  if (openModalBtn && createPostModal) {
+    openModalBtn.addEventListener('click', () => {
+      createPostModal.classList.remove('hidden');
+    });
+  }
+
+  if (closeModalBtn && createPostModal) {
+    closeModalBtn.addEventListener('click', () => {
+      createPostModal.classList.add('hidden');
+    });
+  }
+
+  // Close modal by clicking outside modal content
+  if (createPostModal) {
+    createPostModal.addEventListener('click', (e) => {
+      if (e.target === createPostModal) {
+        createPostModal.classList.add('hidden');
+      }
+    });
+  }
+
+  // --- MODAL MULTI-STEP FORM LOGIC ---
+  const postContent = document.getElementById('postContent');
+  const nextBtn = document.getElementById('nextBtn');
+  const step1 = document.getElementById('step1');
+  const step2 = document.getElementById('step2');
+  const backBtn = document.getElementById('backBtn');
+  const postBtn = document.getElementById('postBtn');
+
+  // Enable Next button only if textarea has text
+  if (postContent && nextBtn) {
+    postContent.addEventListener('input', () => {
+      if (postContent.value.trim().length > 0) {
+        nextBtn.disabled = false;
+        nextBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+        nextBtn.classList.add('bg-blue-600', 'cursor-pointer');
+      } else {
+        nextBtn.disabled = true;
+        nextBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+        nextBtn.classList.remove('bg-blue-600', 'cursor-pointer');
+      }
+    });
+  }
+
+  // Next button click: show step 2, hide step 1, enable Post button
+  if (nextBtn && step1 && step2 && postBtn) {
+    nextBtn.addEventListener('click', () => {
+      step1.classList.add('hidden');
+      step2.classList.remove('hidden');
+
+      postBtn.disabled = false;
+      postBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+      postBtn.classList.add('bg-blue-600', 'cursor-pointer');
+    });
+  }
+
+  // Back button click: show step 1, hide step 2, disable Post button
+  if (backBtn && step1 && step2 && postBtn) {
+    backBtn.addEventListener('click', () => {
+      step2.classList.add('hidden');
+      step1.classList.remove('hidden');
+
+      postBtn.disabled = true;
+      postBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+      postBtn.classList.remove('bg-blue-600', 'cursor-pointer');
+    });
+  }
+
+  // -- TABS FILTERING --
   const tabs = document.querySelectorAll('#tabs > div');
   const postsContainer = document.getElementById('postsContainer');
   const postItems = Array.from(postsContainer.querySelectorAll('.post-item'));
@@ -256,6 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // -- POST MENU TOGGLE --
   window.toggleMenu = function(postId) {
     const menu = document.getElementById(`post-menu-${postId}`);
     if(menu) menu.classList.toggle('hidden');
@@ -270,11 +315,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // -- COMMENT FORM TOGGLE --
   window.toggleCommentForm = function(postId) {
     const form = document.getElementById(`comment-form-${postId}`);
     if(form) form.classList.toggle('hidden');
   };
 
+  // -- EDIT MODAL HANDLING --
   window.openEditModal = function(postId, content) {
     const modal = document.getElementById('editPostModal');
     const contentEl = document.getElementById('editPostContent');
@@ -329,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsDataURL(file);
   });
 
-  // AJAX for Star button (like/unlike)
+  // -- AJAX: Star button (like/unlike) --
   document.querySelectorAll('.star-button').forEach(button => {
     button.addEventListener('click', async () => {
       if (button.disabled) return;
@@ -375,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // AJAX for Repost Submission
+  // -- AJAX: Repost submission --
   document.querySelectorAll('form.repost-form').forEach(form => {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -423,11 +470,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // -- Share post stub --
   window.sharePost = function(postId) {
     alert('Implement share functionality for post id ' + postId);
   };
 
-  // Comment Reply AJAX and toggle form
+  // -- Comment reply toggle and submit --
   window.toggleReplyForm = function(commentId) {
     const form = document.getElementById(`reply-form-${commentId}`);
     if(form) form.classList.toggle('hidden');
@@ -469,14 +517,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const html = createCommentHtml(data.comment);
 
         if(parentId) {
-          // Insert reply inside parent comment div
           const parentDiv = document.getElementById(`comment-${parentId}`);
           if(parentDiv) {
             parentDiv.insertAdjacentHTML('beforeend', html);
             toggleReplyForm(parentId);
           }
         } else {
-          // Insert new root comment into comments container
           const commentsContainer = document.getElementById(`comments-container-${postId}`);
           if(commentsContainer) {
             commentsContainer.insertAdjacentHTML('afterbegin', html);
@@ -536,3 +582,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 @endif
 @endsection
+

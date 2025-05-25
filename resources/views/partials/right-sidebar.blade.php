@@ -31,7 +31,7 @@
   x-data="{ showModal: false }"
   class="bg-gray-900 p-6 rounded-xl text-gray-100 shadow-lg mt-6"
 >
-  <h3 class="mb-6 text-base font-bold">ALUMNI GRADUATED IN THE SAME DEPARTMENT</h3>
+  <h3 class="mb-6 text-base font-bold">ALUMNI GRADUATED</h3>
 
   {{-- Show first 5 alumni only in sidebar --}}
   @foreach ($alumni->take(5) as $alum)
@@ -74,7 +74,7 @@
       class="bg-gray-900 text-gray-100 rounded-xl shadow-lg max-h-[80vh] w-[90vw] max-w-lg overflow-y-auto p-6"
       x-trap="showModal"
     >
-      <h3 class="mb-6 text-lg font-bold">All Alumni Graduated In The Same Department</h3>
+      <h3 class="mb-6 text-lg font-bold">All Alumni Graduated</h3>
 
       @foreach ($alumni as $alum)
         @php

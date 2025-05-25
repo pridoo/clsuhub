@@ -57,7 +57,7 @@
           <input
             type="file"
             id="mediaUpload"
-            name="media"
+            name="media[]"
             accept="image/*,video/*"
             class="hidden"
           />

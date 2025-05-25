@@ -321,22 +321,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if(form) form.classList.toggle('hidden');
   };
 
-  // -- EDIT MODAL HANDLING --
+  // -- EDIT MODAL HANDLING & PREVIEW --
   window.openEditModal = function(postId, content) {
     const modal = document.getElementById('editPostModal');
     const contentEl = document.getElementById('editPostContent');
     const postIdInput = document.getElementById('editPostId');
-    const mediaPreview = document.getElementById('editMediaPreview');
-    const mediaInput = document.getElementById('editMediaUpload');
+    const mediaPreviewEdit = document.getElementById('editMediaPreview');
+    const mediaInputEdit = document.getElementById('editMediaUpload');
 
     if(!modal || !contentEl || !postIdInput) return;
 
     contentEl.value = content;
     postIdInput.value = postId;
 
-    mediaPreview.innerHTML = '';
-    mediaPreview.classList.add('hidden');
-    mediaInput.value = '';
+    mediaPreviewEdit.innerHTML = '';
+    mediaPreviewEdit.classList.add('hidden');
+    mediaInputEdit.value = '';
 
     modal.classList.remove('hidden');
   };
@@ -364,9 +364,9 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.onload = function(e) {
       let html = '';
       if (fileType.startsWith('image/')) {
-        html = `<img src="${e.target.result}" alt="Preview" class="w-full max-h-64 object-contain" />`;
+        html = `<img src="${e.target.result}" alt="Preview" class="w-full max-h-64 object-contain rounded-lg" />`;
       } else if (fileType.startsWith('video/')) {
-        html = `<video controls class="w-full max-h-64"><source src="${e.target.result}" type="${fileType}">Your browser does not support the video tag.</video>`;
+        html = `<video controls class="w-full max-h-64 rounded-lg"><source src="${e.target.result}" type="${fileType}">Your browser does not support the video tag.</video>`;
       } else {
         html = `<p class="text-sm text-red-600">Unsupported file type</p>`;
       }
@@ -375,6 +375,42 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     reader.readAsDataURL(file);
   });
+
+  // === CREATE POST: Media preview logic ===
+  const mediaUpload = document.getElementById('mediaUpload');
+  const mediaPreview = document.getElementById('mediaPreview');
+
+  if (mediaUpload && mediaPreview) {
+    mediaUpload.addEventListener('change', function() {
+      if (this.files.length === 0) {
+        mediaPreview.innerHTML = '';
+        mediaPreview.classList.add('hidden');
+        return;
+      }
+
+      const file = this.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        let html = '';
+        if (file.type.startsWith('image/')) {
+          html = `<img src="${e.target.result}" alt="Preview Image" class="w-full max-h-64 object-contain rounded-lg" />`;
+        } else if (file.type.startsWith('video/')) {
+          html = `
+            <video controls class="w-full max-h-64 rounded-lg">
+              <source src="${e.target.result}" type="${file.type}">
+              Your browser does not support the video tag.
+            </video>`;
+        } else {
+          html = `<p class="text-sm text-red-600">Unsupported file type</p>`;
+        }
+        mediaPreview.innerHTML = html;
+        mediaPreview.classList.remove('hidden');
+      };
+
+      reader.readAsDataURL(file);
+    });
+  }
 
   // -- AJAX: Star button (like/unlike) --
   document.querySelectorAll('.star-button').forEach(button => {
@@ -582,4 +618,5 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 @endif
 @endsection
+
 

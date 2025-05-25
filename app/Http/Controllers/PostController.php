@@ -154,7 +154,7 @@ class PostController extends Controller
         $request->validate([
             'post_id' => 'required|exists:posts,id',
             'content' => 'required|string|max:1000',
-            'media' => 'nullable|file|max:512000',
+            'media.*' => 'nullable|file|max:512000',
             'privacy' => 'required|in:public,department',
         ]);
 
@@ -164,37 +164,48 @@ class PostController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        // Check if the user belongs to a department if 'department' privacy is selected
+        $userId = Auth::id();
+        $departmentId = DB::table('form_responses')->where('user_id', $userId)->value('department_id');
+        if ($request->privacy === 'department' && !$departmentId) {
+            return redirect()->back()->withErrors(['privacy' => 'You do not belong to any department.']);
+        }
+
         $post->content = $request->content;
         $post->privacy = $request->privacy;
+        $post->department_id = $request->privacy === 'department' ? $departmentId : null;
 
-
+        // Delete old media files if new files are uploaded
         if ($request->hasFile('media')) {
             $post->media()->each(function ($media) {
                 Storage::disk('public')->delete($media->file_path);
                 $media->delete();
             });
 
-            $file = $request->file('media');
-            $path = $file->store('post_media', 'public');
-            $mimeType = $file->getMimeType();
-            $type = 'attachment';
-            if (str_starts_with($mimeType, 'image/')) {
-                $type = 'image';
-            } elseif (str_starts_with($mimeType, 'video/')) {
-                $type = 'video';
-            }
+            foreach ($request->file('media') as $file) {
+                $path = $file->store('post_media', 'public');
+                $mimeType = $file->getMimeType();
 
-            PostMedia::create([
-                'post_id' => $post->id,
-                'file_path' => $path,
-                'type' => $type,
-            ]);
+                $type = 'attachment';
+                if (str_starts_with($mimeType, 'image/')) {
+                    $type = 'image';
+                } elseif (str_starts_with($mimeType, 'video/')) {
+                    $type = 'video';
+                }
+
+                PostMedia::create([
+                    'post_id' => $post->id,
+                    'file_path' => $path,
+                    'type' => $type,
+                ]);
+            }
         }
 
         $post->save();
 
         return redirect()->back()->with('success', 'Post updated successfully!');
     }
+
 
     public function toggleHidden(Request $request, $postId)
     {

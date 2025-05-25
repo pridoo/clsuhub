@@ -1,5 +1,6 @@
 <div id="editPostModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
   <div class="bg-white rounded-xl p-6 shadow-lg w-[500px] max-w-full relative">
+    
     <!-- Close button -->
     <button
       id="closeEditModalBtn"
@@ -20,6 +21,7 @@
       @csrf
       @method('PUT')
 
+      <!-- Hidden post ID -->
       <input type="hidden" name="post_id" id="editPostId" />
 
       <!-- Post content -->
@@ -53,8 +55,9 @@
         <input
           type="file"
           id="editMediaUpload"
-          name="media"
+          name="media[]"
           accept="image/*,video/*"
+          multiple
           class="hidden"
         />
       </div>
@@ -65,7 +68,7 @@
         class="mt-4 rounded-lg overflow-hidden hidden border border-gray-300"
         aria-live="polite"
       >
-        <!-- Preview will appear here -->
+        <!-- Preview will appear here via JavaScript -->
       </div>
 
       <!-- Privacy selection -->
